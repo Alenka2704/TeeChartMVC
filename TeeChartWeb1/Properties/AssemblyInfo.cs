@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using Steema.TeeChart;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
