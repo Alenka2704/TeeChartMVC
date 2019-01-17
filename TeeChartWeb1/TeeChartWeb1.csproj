@@ -102,8 +102,15 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="TeeChart">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Steema Software\Steema TeeChart for .NET 2018 4.1.2018.05040\net462\x86\TeeChart.dll</HintPath>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="TeeChart, Version=4.2018.12.17, Culture=neutral, PublicKeyToken=9c8126276c77bdb7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Steema.TeeChart.NET.4.2018.12.17\lib\net40\TeeChart.dll</HintPath>
+    </Reference>
+    <Reference Include="TeeChart.WPF, Version=4.2018.12.17, Culture=neutral, PublicKeyToken=98e8c3f289a4e286, processorArchitecture=MSIL">
+      <HintPath>..\packages\Steema.TeeChart.NET.4.2018.12.17\lib\net40\TeeChart.WPF.dll</HintPath>
+    </Reference>
+    <Reference Include="TeeChart.Xaml.WPF, Version=4.2018.12.17, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Steema.TeeChart.NET.4.2018.12.17\lib\net40\TeeChart.Xaml.WPF.dll</HintPath>
     </Reference>
     <Reference Include="WebGrease">
       <Private>True</Private>
@@ -158,6 +165,7 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <EmbeddedResource Include="TeeChart.licenses" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
