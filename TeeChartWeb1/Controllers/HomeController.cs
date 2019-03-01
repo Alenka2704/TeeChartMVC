@@ -4,16 +4,18 @@ using System.Drawing;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using Steema.TeeChart;
+using Steema.TeeChart.Styles;
 using TeeChartWeb1.Models;
 
 namespace TeeChartWeb1.Controllers
 {
-	public class HomeController : Controller
+	public class HomeController: Controller
 	{
 		public ActionResult Index()
 		{
 			MyModel model = new MyModel();
-			CreateSwedenGraph(model);
+			CreateHistogramGraph(model);
 			return View(model);
 		}
 		void CreateSwedenGraph(MyModel model)
@@ -37,7 +39,7 @@ namespace TeeChartWeb1.Controllers
 
 			myChart.Axes.Left.Grid.Visible = false;
 
-			Steema.TeeChart.Styles.Line series = (Steema.TeeChart.Styles.Line)myChart.Series.Add(new Steema.TeeChart.Styles.Line());
+			Line series = (Line)myChart.Series.Add(new Line());
 			//			series.GetHorizAxis.Logarithmic = true;
 			//			series.GetHorizAxis.LogarithmicBase = 10;
 			series.Add(0.0001, 40);
@@ -86,6 +88,40 @@ namespace TeeChartWeb1.Controllers
 			myChart.Export.Image.JScript.Height = 300;
 			//build the Chart
 			myChart.Export.Image.JScript.Save(tempStream2); //write to stream
+			tempStream2.Position = 0;
+			model.graph = Content((new System.IO.StreamReader(tempStream2)).ReadToEnd()).Content;
+		}
+
+		void CreateHistogramGraph(MyModel model)
+		{
+			TChart graph = new TChart();
+			graph.Text = "Histograms";
+			for (int i = 0; i < 3; i++)
+			{
+				Line lineSeries = (Line)graph.Series.Add(new Line());
+				Bar barSeries = (Bar)graph.Series.Add(new Bar());
+				barSeries.Marks.Style = MarksStyles.Value;
+				barSeries.Title = "Histogram " + (i + 1);
+				barSeries.CustomVertAxis = graph.Axes.Custom.Add(new Axis(false, false, graph.Chart) { StartEndPositionUnits = PositionUnits.Percent });
+				barSeries.CustomVertAxis.Title.Text = "Distribution";
+				barSeries.CustomVertAxis.Labels.ValueFormat = "0F";
+				barSeries.FillSampleValues(50);
+			}
+			graph.Axes.Custom[0].StartPosition = 0;
+			graph.Axes.Custom[0].EndPosition = 32;
+			graph.Axes.Custom[1].StartPosition = 34;
+			graph.Axes.Custom[1].EndPosition = 66;
+			graph.Axes.Custom[2].StartPosition = 68;
+			graph.Axes.Custom[2].EndPosition = 100;
+			graph.Axes.Bottom.Grid.Visible = true;
+			graph.Axes.Bottom.Title.Text = "Voltage (V)";
+
+			//setup the Chart export stream
+			var tempStream2 = new System.IO.MemoryStream();
+			graph.Export.Image.JScript.Width = 1500; //size the Chart
+			graph.Export.Image.JScript.Height = 800;
+			//build the Chart
+			graph.Export.Image.JScript.Save(tempStream2); //write to stream
 			tempStream2.Position = 0;
 			model.graph = Content((new System.IO.StreamReader(tempStream2)).ReadToEnd()).Content;
 		}
