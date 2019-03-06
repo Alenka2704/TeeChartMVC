@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Linq;
-using System.Web;
+using System.Web.Hosting;
 using System.Web.Mvc;
 using Steema.TeeChart;
 using Steema.TeeChart.Styles;
@@ -96,15 +94,14 @@ namespace TeeChartWeb1.Controllers
 		{
 			TChart graph = new TChart();
 			graph.Text = "Histograms";
+			graph.Panel.MarginLeft = 7;
 			for (int i = 0; i < 3; i++)
 			{
-				Line lineSeries = (Line)graph.Series.Add(new Line());
 				Bar barSeries = (Bar)graph.Series.Add(new Bar());
 				barSeries.Marks.Style = MarksStyles.Value;
 				barSeries.Title = "Histogram " + (i + 1);
 				barSeries.CustomVertAxis = graph.Axes.Custom.Add(new Axis(false, false, graph.Chart) { StartEndPositionUnits = PositionUnits.Percent });
 				barSeries.CustomVertAxis.Title.Text = "Distribution";
-				barSeries.CustomVertAxis.Labels.ValueFormat = "0F";
 				barSeries.FillSampleValues(50);
 			}
 			graph.Axes.Custom[0].StartPosition = 0;
@@ -115,11 +112,13 @@ namespace TeeChartWeb1.Controllers
 			graph.Axes.Custom[2].EndPosition = 100;
 			graph.Axes.Bottom.Grid.Visible = true;
 			graph.Axes.Bottom.Title.Text = "Voltage (V)";
+			graph.Export.Image.JScript.CustomCode = System.IO.File.ReadAllLines(HostingEnvironment.MapPath("~/Scripts/graphs/histogramGraphCustomCode.js")).Select(item => item.Replace("\"barsContentsHere\"", System.Web.Helpers.Json.Encode("bar clicked: "))).ToArray();
+			graph.Export.Image.JScript.BodyHTML = System.IO.File.ReadAllLines(HostingEnvironment.MapPath("~/Scripts/graphs/histogramGraphCustomHtml.html"));
 
 			//setup the Chart export stream
 			var tempStream2 = new System.IO.MemoryStream();
-			graph.Export.Image.JScript.Width = 1500; //size the Chart
-			graph.Export.Image.JScript.Height = 800;
+			graph.Export.Image.JScript.Width = 800; //size the Chart
+			graph.Export.Image.JScript.Height = 500;
 			//build the Chart
 			graph.Export.Image.JScript.Save(tempStream2); //write to stream
 			tempStream2.Position = 0;
