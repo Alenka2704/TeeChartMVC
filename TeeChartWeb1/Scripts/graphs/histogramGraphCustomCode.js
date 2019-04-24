@@ -1,47 +1,58 @@
 ﻿var evaluationManager = new EvaluationManager({
 });
-var barsContents = "barsContentsHere", i;
-console.log("Histograms script");
+var barsContents = "barsContentsHere";
+console.log("chart1 script");
 var hover = -1;
-for (i = 4; i < Histograms.axes.items.length; i ++) {
-    Histograms.axes.items[i].labels.decimals = 0;
-    Histograms.series.items[i - 4].cursor = "pointer";
-	Histograms.series.items[i - 4].onclick = function (series, index, x, y) {
-        evaluationManager.fillRecordsInfo(barsContents + index);
-        if (hover !== index) {
-            series.hover.enabled = true;
-            Histograms.draw();
-            series.hover.enabled = false;
-        }
-        else {
-            Histograms.draw();
-        }
-        hover = index;
+var phase = -1;
+for (var i = 4; i < chart1.axes.items.length; i +=2) {
+    chart1.axes.items[i].labels.decimals = 0;
+    chart1.series.items[i - 4].cursor = "pointer";
+	chart1.series.items[i - 4].onclick = function (series, index, x, y) {
+		if (hover !== index || chart1.series.items.indexOf(series) != phase) {
+			series.hover.enabled = true;
+			chart1.draw();
+			series.hover.enabled = false;
+		}
+		else {
+			chart1.draw();
+		}
+		hover = index;
+		phase = chart1.series.items.indexOf(series) / 2;
+        evaluationManager.fillRecordsInfo(barsContents+phase + index);
 	}
 }
-Histograms.mousedown = function (event) {
+chart1.mousedown = function (event) {
     var mousePos = [];
-    Histograms.calcMouse(event, mousePos);
-    for (var seriesIndex = Histograms.series.items.length - 1; seriesIndex >= 0; seriesIndex--) {
-        var series = Histograms.series.items[seriesIndex];
+    chart1.calcMouse(event, mousePos);
+    for (var seriesIndex = chart1.series.items.length - 1; seriesIndex >= 0; seriesIndex--) {
+        var series = chart1.series.items[seriesIndex];
         for (var valueIndex = series.data.values.length - 1; valueIndex >= 0 ; valueIndex--) {
             if (!series.isNull(valueIndex)) {
                 var markPos = [];
                 var inv = series.markPos(valueIndex, markPos);
                 if (series.marks.canDraw(markPos.x, markPos.y, valueIndex, inv)) {
                     if (series.marks.clicked(mousePos)) {
-                        console.log("series " + seriesIndex + ", mark " + valueIndex + " clicked");
-                        return;
+						evaluationManager.fillRecordsInfo(barsContents + phase + valueIndex);
+						if (hover !== valueIndex || chart1.series.items.indexOf(series) != phase) {
+							series.hover.enabled = true;
+							chart1.draw();
+							series.hover.enabled = false;
+						}
+						else {
+							chart1.draw();
+						}
+						hover = valueIndex;
+						phase = chart1.series.items.indexOf(series) / 2;
+						return;
                     }
                 }
-            }
-            
+            }            
         }
     }
 }
 
-Histograms.legend.oldDrawSymbol = Histograms.legend.drawSymbol;
-Histograms.legend.drawSymbol = function (series, index, itemPos) {
+chart1.legend.oldDrawSymbol = chart1.legend.drawSymbol;
+chart1.legend.drawSymbol = function (series, index, itemPos) {
     if (series instanceof Tee.Line) {
         this.symbol.style = "line";
     }
@@ -98,18 +109,18 @@ function newDrawAxis() {
     }
 }
 
-for (i = 4; i < Histograms.axes.items.length; i++) {
-    if (Histograms.axes.items[i].format.stroke.fill === "") {
-        Histograms.axes.items[i].format.stroke.oldFill = Histograms.axes.items[i].format.stroke.fill;
-        Histograms.axes.items[i].format.stroke.fill = "black";
+for (i = 4; i < chart1.axes.items.length; i++) {
+    if (chart1.axes.items[i].format.stroke.fill === "") {
+        chart1.axes.items[i].format.stroke.oldFill = chart1.axes.items[i].format.stroke.fill;
+        chart1.axes.items[i].format.stroke.fill = "black";
     }
 
-    Histograms.axes.items[i].oldDrawAxis = Histograms.axes.items[i].drawAxis;
-    Histograms.axes.items[i].drawAxis = newDrawAxis;
+    chart1.axes.items[i].oldDrawAxis = chart1.axes.items[i].drawAxis;
+    chart1.axes.items[i].drawAxis = newDrawAxis;
 }
 
-Histograms.axes.items[4].minLine = true;
-Histograms.axes.items[5].minLine = true;
+chart1.axes.items[4].minLine = true;
+chart1.axes.items[5].minLine = true;
 
 var drawTitle = function () {
     if (this.rotation === undefined || this.rotation === 0) {
@@ -118,7 +129,7 @@ var drawTitle = function () {
     }
     else {
         //console.log(this);
-        var ctx = Histograms.ctx;
+        var ctx = chart1.ctx;
         ctx.save();
         this.position.oldX = this.position.x;
         this.position.oldY = this.position.y;
@@ -138,9 +149,9 @@ var drawTitle = function () {
     }
 }
 
-Histograms.panel.margins.left = 12;
-var leftTitle = new Tee.Annotation(Histograms);
-leftTitle.format.font.style = Histograms.axes.items[Histograms.axes.items.length - 1].title.format.font.style;
+chart1.panel.margins.left = 12;
+var leftTitle = new Tee.Annotation(chart1);
+leftTitle.format.font.style = chart1.axes.items[chart1.axes.items.length - 1].title.format.font.style;
 leftTitle.padding = 4;
 leftTitle.transparent = true;
 leftTitle.rotation = 90;
@@ -149,11 +160,11 @@ leftTitle.position.x = 15;
 leftTitle.position.y = 300;
 leftTitle.text = "Left axes description";
 
-Histograms.tools.add(leftTitle);
+chart1.tools.add(leftTitle);
 leftTitle.forceDraw = drawTitle;
 
-var rightTitle = new Tee.Annotation(Histograms);
-rightTitle.format.font.style = Histograms.axes.items[Histograms.axes.items.length - 1].title.format.font.style;
+var rightTitle = new Tee.Annotation(chart1);
+rightTitle.format.font.style = chart1.axes.items[chart1.axes.items.length - 1].title.format.font.style;
 rightTitle.padding = 4;
 rightTitle.transparent = true;
 rightTitle.rotation = -90;
@@ -162,21 +173,28 @@ rightTitle.position.x = 700;
 rightTitle.position.y = 50;
 rightTitle.text = "Long description for the right side of the chart";
 
-Histograms.tools.add(rightTitle);
+chart1.tools.add(rightTitle);
 rightTitle.forceDraw = drawTitle;
 
-Histograms.legend.padding = 10;
+chart1.legend.padding = 10;
 
-Histograms.draw();
+chart1.draw();
 
-axis = Histograms.axes.items[Histograms.axes.items.length - 1];
-leftTitle.position.x = Histograms.chartRect.x - leftTitle.bounds.height - axis.ticks.length - axis.minmaxLabelWidth(true) - axis.title.bounds.height - 10;
-leftTitle.position.y = Histograms.chartRect.y + Histograms.chartRect.height / 2 + leftTitle.bounds.width / 2;
+axis = chart1.axes.items[chart1.axes.items.length - 1];
+leftTitle.position.x = chart1.chartRect.x - leftTitle.bounds.height - axis.ticks.length - axis.minmaxLabelWidth(true) - axis.title.bounds.height - 10;
+leftTitle.position.y = chart1.chartRect.y + chart1.chartRect.height / 2 + leftTitle.bounds.width / 2;
 
-rightTitle.position.x = Histograms.chartRect.getRight() + rightTitle.bounds.height + 20;
-rightTitle.position.y = Histograms.chartRect.y + Histograms.chartRect.height / 2 - rightTitle.bounds.width / 2;
+rightTitle.position.x = chart1.chartRect.getRight() + rightTitle.bounds.height + 20;
+rightTitle.position.y = chart1.chartRect.y + chart1.chartRect.height / 2 - rightTitle.bounds.width / 2;
 
-Histograms.tools.items[0] = Histograms.tools.items[Histograms.tools.items.length - 1];
-Histograms.tools.items[Histograms.tools.items.length - 1] = cursor1;
+chart1.tools.items[0] = chart1.tools.items[chart1.tools.items.length - 1];
+chart1.tools.items[chart1.tools.items.length - 1] = cursor1;
 
 cursor1.vertAxis = null;
+this.resize(chart1);
+
+$(document).ready(() => {
+	var body = $(document.body)[0];
+	var canvas = body.getElementsByTagName("canvas")[1];
+	canvas.remove();
+});

@@ -17,9 +17,7 @@ namespace TeeChartWeb1.Controllers
 		{
 			MyModel model = new MyModel();
 			CreateHistogramGraph(model);
-            CreateSwedenGraph(model);
-            ExportToJS(model);
-            return View(model);
+			return View(model);
 		}
 		void CreateSwedenGraph(MyModel model)
 		{
@@ -30,7 +28,7 @@ namespace TeeChartWeb1.Controllers
 			myChart.Panel.Shadow.Visible = false;
 			myChart.Panel.Gradient.Visible = false;
 
-            myChart.Text = "Sweden";
+			myChart.Text = "Sweden";
 			myChart.Header.Gradient.Visible = false;
 			myChart.Header.Font.Gradient.Visible = false;
 			myChart.Header.Font.Color = Color.Black;
@@ -79,9 +77,14 @@ namespace TeeChartWeb1.Controllers
 			//wChart3.Series.Add(p3);
 
 			myChart.Legend.Visible = false;
-
-            model.charts.Add(myChart);
-        }
+			var tempStream2 = new System.IO.MemoryStream();
+			myChart.Export.Image.JScript.Width = 800; //size the Chart
+			myChart.Export.Image.JScript.Height = 300;
+			//build the Chart
+			myChart.Export.Image.JScript.Save(tempStream2); //write to stream
+			tempStream2.Position = 0;
+			model.graph = Content((new System.IO.StreamReader(tempStream2)).ReadToEnd()).Content;
+		}
 
 		void CreateHistogramGraph(MyModel model)
 		{
@@ -91,80 +94,41 @@ namespace TeeChartWeb1.Controllers
 			for (int i = 0; i < 3; i++)
 			{
 				Bar barSeries = (Bar)graph.Series.Add(new Bar());
-                barSeries.BarWidthPercent = 110;
-                barSeries.Marks.Style = MarksStyles.Value;
+				barSeries.BarWidthPercent = 110;
+				barSeries.Marks.Style = MarksStyles.Value;
 				barSeries.Title = "Histogram " + (i + 1);
 				barSeries.CustomVertAxis = graph.Axes.Custom.Add(new Axis(false, false, graph.Chart) { StartEndPositionUnits = PositionUnits.Percent });
 				barSeries.CustomVertAxis.Title.Text = "Distribution";
-				barSeries.FillSampleValues(50);
+				barSeries.FillSampleValues(20);
+
+				Line lineSeries = (Line)graph.Series.Add(new Line());
+				lineSeries.CustomVertAxis = graph.Axes.Custom.Add(new Axis(false, true, graph.Chart) { StartEndPositionUnits = PositionUnits.Percent });
+				lineSeries.CustomVertAxis.Title.Text = "Cumulative";
+				lineSeries.FillSampleValues(20);
 			}
-			graph.Axes.Custom[0].StartPosition = 0;
-			graph.Axes.Custom[0].EndPosition = 32;
-			graph.Axes.Custom[1].StartPosition = 34;
-			graph.Axes.Custom[1].EndPosition = 66;
-			graph.Axes.Custom[2].StartPosition = 68;
-			graph.Axes.Custom[2].EndPosition = 100;
+			graph.Axes.Custom[0].StartPosition = graph.Axes.Custom[1].StartPosition = 0;
+			graph.Axes.Custom[0].EndPosition = graph.Axes.Custom[1].EndPosition = 32;
+			graph.Axes.Custom[2].StartPosition = graph.Axes.Custom[3].StartPosition = 34;
+			graph.Axes.Custom[2].EndPosition = graph.Axes.Custom[3].EndPosition = 66;
+			graph.Axes.Custom[4].StartPosition = graph.Axes.Custom[5].StartPosition = 68;
+			graph.Axes.Custom[4].EndPosition = graph.Axes.Custom[5].EndPosition = 100;
 			graph.Axes.Bottom.Grid.Visible = true;
 			graph.Axes.Bottom.Title.Text = "Voltage (V)";
 			graph.Export.Image.JScript.CustomCode = System.IO.File.ReadAllLines(HostingEnvironment.MapPath("~/Scripts/graphs/histogramGraphCustomCode.js")).Select(item => item.Replace("\"barsContentsHere\"", System.Web.Helpers.Json.Encode("bar clicked: "))).ToArray();
 			graph.Export.Image.JScript.BodyHTML = System.IO.File.ReadAllLines(HostingEnvironment.MapPath("~/Scripts/graphs/histogramGraphCustomHtml.html"));
+			graph.Export.Image.JScript.ExternalCode = System.IO.File.ReadAllLines(HostingEnvironment.MapPath("~/Scripts/graphs/histogramGraphExternalCode.js"));
 
-            graph.Axes.Left.SetMinMax(0, 100);
-            CursorTool cursor = new CursorTool(graph.Chart);
-            cursor.FollowMouse = true;
+			graph.Axes.Left.SetMinMax(0, 100);
+			CursorTool cursor = new CursorTool(graph.Chart);
+			cursor.FollowMouse = true;
 
-            model.charts.Add(graph);
-        }
-
-        public void ExportToJS(MyModel model)
-        {
-            List<System.IO.MemoryStream> streams = new List<System.IO.MemoryStream>();
-            System.IO.MemoryStream tempStream2 = null;
-            for (var i=0; i < model.charts.Count; i++)
-            {
-                var chart = model.charts[i];
-
-                //setup the Chart export stream
-                tempStream2 = new System.IO.MemoryStream();
-                chart.Export.Image.JScript.DoFullPage = false;
-                chart.Export.Image.JScript.Width = 800; //size the Chart
-                chart.Export.Image.JScript.Height = 500;
-                chart.Export.Image.JScript.ChartName = chart.Text;
-                chart.Export.Image.JScript.CanvasName = chart.Text;
-
-                //build the Chart
-                chart.Export.Image.JScript.Save(tempStream2); //write to stream
-                tempStream2.Position = 0;
-
-                streams.Add(tempStream2);
-            }
-
-            var page = new List<string>();
-            page.Add("<html>");
-            page.Add("<head>");
-            page.Add("<title>My Site</title>");
-            page.Add("<script src=\"https://www.steema.com/files/public/teechart/html5/latest/src/teechart.js\" type=\"text/javascript\"></script>");
-            page.Add("<script src=\"/SiteScripts/EvaluationManager.js\"></script>");
-            page.Add("<script type=\"text/javascript\">");
-            page.Add("function createCharts(){");
-            foreach (var stream in streams)
-            {
-                page.Add(new System.IO.StreamReader(stream).ReadToEnd());
-            }
-            page.Add("}");
-            page.Add("</script>");
-            page.Add("</head>");
-            page.Add("<body onload=\"createCharts()\">");
-            foreach (var chart in model.charts)
-            {
-                page.Add("<canvas id=\"" + chart.Export.Image.JScript.CanvasName + "\" width=\"" + chart.Export.Image.JScript.Width + "\" height=\"" + chart.Export.Image.JScript.Height + "\">");
-                page.Add("This browser does not seem to support HTML5 Canvas.");
-                page.Add("</canvas>");
-            }
-            page.Add("</body>");
-            page.Add("</html>");
-
-            model.graph = Content(string.Join(Environment.NewLine, page)).Content;
-        }
-    }
+			var tempStream2 = new System.IO.MemoryStream();
+			graph.Export.Image.JScript.Width = 1500; //size the Chart
+			graph.Export.Image.JScript.Height = 800;
+			//build the Chart
+			graph.Export.Image.JScript.Save(tempStream2); //write to stream
+			tempStream2.Position = 0;
+			model.graph = Content((new System.IO.StreamReader(tempStream2)).ReadToEnd()).Content;
+		}
+	}
 }

@@ -9,7 +9,5 @@ namespace TeeChartWeb1.Models
 	public class MyModel
 	{
 	    public string graph = "<html><body>No graph here</body></html>";
-
-        public List<TChart> charts = new List<TChart>();
 	}
 }
