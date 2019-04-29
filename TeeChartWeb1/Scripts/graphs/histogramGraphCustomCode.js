@@ -32,6 +32,7 @@ chart1.mousedown = function (event) {
                 var inv = series.markPos(valueIndex, markPos);
                 if (series.marks.canDraw(markPos.x, markPos.y, valueIndex, inv)) {
                     if (series.marks.clicked(mousePos)) {
+                        chart1.zoom.active = false;
 						evaluationManager.fillRecordsInfo(barsContents + phase + valueIndex);
 						if (hover !== valueIndex || chart1.series.items.indexOf(series) != phase) {
 							series.hover.enabled = true;
@@ -42,7 +43,8 @@ chart1.mousedown = function (event) {
 							chart1.draw();
 						}
 						hover = valueIndex;
-						phase = chart1.series.items.indexOf(series) / 2;
+                        phase = chart1.series.items.indexOf(series) / 2;
+                        chart1.zoom.active = true;
 						return;
                     }
                 }
@@ -149,7 +151,6 @@ var drawTitle = function () {
     }
 }
 
-chart1.panel.margins.left = 12;
 var leftTitle = new Tee.Annotation(chart1);
 leftTitle.format.font.style = chart1.axes.items[chart1.axes.items.length - 1].title.format.font.style;
 leftTitle.padding = 4;
@@ -176,19 +177,11 @@ rightTitle.text = "Long description for the right side of the chart";
 chart1.tools.add(rightTitle);
 rightTitle.forceDraw = drawTitle;
 
-chart1.legend.padding = 10;
-
 chart1.draw();
-
-axis = chart1.axes.items[chart1.axes.items.length - 1];
-leftTitle.position.x = chart1.chartRect.x - leftTitle.bounds.height - axis.ticks.length - axis.minmaxLabelWidth(true) - axis.title.bounds.height - 10;
-leftTitle.position.y = chart1.chartRect.y + chart1.chartRect.height / 2 + leftTitle.bounds.width / 2;
-
-rightTitle.position.x = chart1.chartRect.getRight() + rightTitle.bounds.height + 20;
-rightTitle.position.y = chart1.chartRect.y + chart1.chartRect.height / 2 - rightTitle.bounds.width / 2;
 
 chart1.tools.items[0] = chart1.tools.items[chart1.tools.items.length - 1];
 chart1.tools.items[chart1.tools.items.length - 1] = cursor1;
+cursor1.render = "full";
 
 cursor1.vertAxis = null;
 this.resize(chart1);
